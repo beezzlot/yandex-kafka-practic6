@@ -1,0 +1,53 @@
+networks:
+  kafka-internal:
+    external: true
+
+services:
+  consumer-topic1:
+    image: python:3.11-slim
+    container_name: consumer-topic1
+    restart: unless-stopped
+    working_dir: /app
+    environment:
+      BOOTSTRAP_SERVERS: "localhost:9094,localhost:9095,localhost:9083"
+      TOPIC: "topic-1"
+      GROUP_ID: "app-consumer-group-topic1"
+      SSL_CA_LOCATION: "/etc/kafka/secrets/ca-cert.pem"
+      SSL_CERT_LOCATION: "/etc/kafka/secrets/broker1.crt"
+      SSL_KEY_LOCATION: "/etc/kafka/secrets/broker1.key"
+      SSL_KEY_PASSWORD: "changeit"
+    volumes:
+      - ./ssl:/etc/kafka/secrets:ro
+      - ./clients/consumer.py:/app/consumer.py:ro
+    command: >
+      bash -c "
+      pip install --no-cache-dir confluent-kafka &&
+      python consumer.py
+      "
+    networks:
+      - kafka-internal
+
+
+  consumer-topic2-denied:
+    image: python:3.11-slim
+    container_name: consumer-topic2-denied
+    restart: unless-stopped
+    working_dir: /app
+    environment:
+      BOOTSTRAP_SERVERS: "localhost:9094,localhost:9095,localhost:9083"
+      TOPIC: "topic-2"
+      GROUP_ID: "app-consumer-group-topic2"
+      SSL_CA_LOCATION: "/etc/kafka/secrets/ca-cert.pem"
+      SSL_CERT_LOCATION: "/etc/kafka/secrets/broker1.crt"
+      SSL_KEY_LOCATION: "/etc/kafka/secrets/broker1.key"
+      SSL_KEY_PASSWORD: "changeit"
+    volumes:
+      - ./ssl:/etc/kafka/secrets:ro
+      - ./clients/consumer.py:/app/consumer.py:ro
+    command: >
+      bash -c "
+      pip install --no-cache-dir confluent-kafka &&
+      python consumer.py
+      "
+    networks:
+      - kafka-internal
